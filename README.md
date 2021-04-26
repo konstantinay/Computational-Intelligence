@@ -1,3 +1,3 @@
 # Computational-Intelligence
-University project
-Artificial Neural Network with 1 and 2 hidden layers and Convolution Neural Network using the MNIST dataset.
+University project for elective course Computational Intelligence.
+Artificial Neural Networks with 1 and 2 hidden layers and Convolution Neural Network using the MNIST dataset.
