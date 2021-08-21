@@ -21,17 +21,17 @@ def initializePopulation(size, genes):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(784, 397)       #eisodos
+        self.fc1 = nn.Linear(784, 397)       #input
         self.fc2 = nn.Linear(397, 204)
         self.fc3 = nn.Linear(204, 10)
 
-        self.relu = nn.LeakyReLU(0.2)        #sun. energopoihshs krufou epipedou
-        self.softmax = nn.Softmax(dim=1)     #sun. energopoihshs epipedou eksodou
+        self.relu = nn.LeakyReLU(0.2)        #hidden layer activation function 
+        self.softmax = nn.Softmax(dim=1)     #output layer activation function
         
     def forward(self, input):
-        x = self.relu(self.fc1(input))   # hidden layer
-        x = self.relu(self.fc2(x))       # hidden layer
-        return self.softmax(self.fc3(x)) # output layer
+        x = self.relu(self.fc1(input))      # hidden layer
+        x = self.relu(self.fc2(x))          # hidden layer
+        return self.softmax(self.fc3(x))    # output layer
     
 # Custom Dataset function
 class myDataset(torch.utils.data.Dataset):
@@ -58,7 +58,7 @@ data = data/255
 test_dataset = myDataset(data, labels)
 test_dataloader = DataLoader(test_dataset, batch_size=64, num_workers= 0)
 
-#arxikopoihsh diktyoy me ta varh apo to apothikeumeno tou merous A
+#initialize network with saved weights from bestANN.pth
 net = Net().double()
 net.load_state_dict(torch.load('./bestANN.pth'))
 net.eval()
@@ -71,7 +71,7 @@ mean_epoch = 0
 mean_plot = []
 
 for loop in range(10):
-    #gia to termatismo
+    #buffer to terminate if there isn't progress for 10 generations - save time
     buffer = [0 for i in range(10)]
     temp_plot = []
     population = initializePopulation(chromosomes, genes)
@@ -94,7 +94,7 @@ for loop in range(10):
                         test_correct[k]+= 1
                     test_total[k] += 1
             
-        #gia poinh sto accuracy an exei megalo arithmo eisodwn
+        #punish accuracy when having large number of inputs
         if np.count_nonzero(chromosome == 1) > num_inputs:
             avg_test_accuracy=90*(test_correct/test_total)
         else:
@@ -169,13 +169,13 @@ for loop in range(10):
 mean_best_fit /= 10
 mean_epoch /= 10
 
-#ftiaxnoume ta plots
+#plots
 plt.figure()
 plt.title('Mean Best Accuracy Plot for case 9')
 plt.ylabel('Mean Accuracy')
 plt.xlabel('Generations')
 
-#gia ton ypologismo tou plot kathws den einai idios o arithmos geniwn
+#for plot - number of generations is different in each loop
 max_len = 0
 for i in range(10):
     max_len = max([max_len, len(mean_plot[i])])
