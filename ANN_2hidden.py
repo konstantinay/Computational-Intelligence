@@ -7,13 +7,13 @@ from matplotlib import pyplot as plt
 import random
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-#epilegoume sumfwna me ta erwthmata
+#list of possible values
 bottleneck = 204    #(397, 204, 407)
 lr = 0.1            #(0.001, 0.5, 0.1)
 m=0.6               #(0.2, 0.6)
 r=0.9               #(0.1, 0.5, 0.9)
 
-#apo thn timh tou label ftiaxnoume ena one hot dianusma - gia to mse
+#create one hot vector from label values
 def batch2onehots(labels):
     one_hot = torch.zeros(labels.size()[0], 10)
     for i in range(len(labels)):
@@ -25,7 +25,7 @@ def batch2onehots(labels):
 #cross validation
 def n_fold(data,labels,n):
     data_len = len(data)
-    eval_len = data_len / 5 #to 1/5 einai gia eval sto cv
+    eval_len = data_len / 5  #the 1/5 is to eval in cv
     eval_len = int(eval_len)
     eval_data = data[n*eval_len: (n+1) * eval_len, :]
     eval_labels = labels[n*eval_len: (n+1) * eval_len]
@@ -39,20 +39,20 @@ def n_fold(data,labels,n):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(784, 397)       #eisodos
+        self.fc1 = nn.Linear(784, 397)                  #input
         self.fc2 = nn.Linear(397, bottleneck)
         self.fc3 = nn.Linear(bottleneck, 10)
         #eisodos
-        self.relu = nn.LeakyReLU(0.2)                #sun. energopoihshs krufou epipedou
-        self.softmax = nn.Softmax(dim=1)     #sun. energopoihshs epipedou eksodou
+        self.relu = nn.LeakyReLU(0.2)                   #hidden layer activation function
+        self.softmax = nn.Softmax(dim=1)                #output layer activation function
         
     def forward(self, input):
-        x = self.relu(self.fc1(input))   # hidden layer
-        x = self.relu(self.fc2(x))   # hidden layer
-        return self.softmax(self.fc3(x)) # output layer
+        x = self.relu(self.fc1(input))                  # hidden layer
+        x = self.relu(self.fc2(x))                      # hidden layer
+        return self.softmax(self.fc3(x))                # output layer
 
 
-#dhmiourgia custom dataset synarthshs gia to dataloader
+#create custom dataset function for dataloader
 class myDataset(torch.utils.data.Dataset):
     def __init__(self, data, labels):
         self.data = data
@@ -67,14 +67,14 @@ class myDataset(torch.utils.data.Dataset):
         sample = {'data' : data, 'labels' : labels}
         return sample
 
-#diavazo ta dedomena
+#read dataset
 train = pd.read_csv('./mnist_train.csv')
 test = pd.read_csv('./mnist_test.csv')
 
-#apo pandas se numpy
+#from pandas to numpy
 x = train.to_numpy()
 
-#ksexwrizw labels apo dedomena
+#separate labels from data
 labels = x[:,0]
 data = x[:,1:]
 
@@ -116,7 +116,7 @@ for fold in range(5):
             batch_ce = torch.sum(goal*torch.log(output),dim=1)
             loss_ce = -torch.mean(batch_ce)
             
-            #epilegoume th metrikh pou theloume 
+            #choose loss function (cross entropy better for classification)
             #epoch_loss += loss_ce.item()
             epoch_loss += loss_mse.item()
             loss_mse.backward()
@@ -140,11 +140,11 @@ for fold in range(5):
                 batch_ce = torch.sum(goal*torch.log(output),dim=1)
                 loss_ce = -torch.mean(batch_ce)
                 
-                #antistoixa me to train
+                #same loss function as train
                 #eval_loss += loss_ce.item()
                 eval_loss += loss_mse.item()                
 
-                #ypologizoyme to eval accuracy
+                #calculate eval accuracy
                 for idx, i in enumerate(output):
                    
                     if torch.argmax(i) == etiketes[idx]:
