@@ -8,9 +8,9 @@ import random
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 lr = 0.001
-bottleneck = 794    #epilegoume tis times sumfwna me ta erwthmata (10, 397, 794)
+bottleneck = 794    #list of possible values (10, 397, 794)
 
-#apo thn timh tou label ftiaxnoume ena one hot dianusma - gia to mse
+#create one hot vector from label value
 def batch2onehots(labels):
     one_hot = torch.zeros(labels.size()[0], 10)
     for i in range(len(labels)):
@@ -22,7 +22,7 @@ def batch2onehots(labels):
 #cross validation
 def n_fold(data,labels,n):
     data_len = len(data)
-    eval_len = data_len / 5 #to 1/5 einai gia eval sto cv
+    eval_len = data_len / 5 #1/5 is for eval in cross - validation
     eval_len = int(eval_len)
     eval_data = data[n*eval_len: (n+1) * eval_len, :]
     eval_labels = labels[n*eval_len: (n+1) * eval_len]
@@ -33,22 +33,22 @@ def n_fold(data,labels,n):
     return eval_data, eval_labels, train_data, train_labels    
 
 
-#arxitektonikh nn
+#architecture of nn
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.fc1 = nn.Linear(784, bottleneck)       #eisodos
+        self.fc1 = nn.Linear(784, bottleneck)        #input
         self.fc2 = nn.Linear(bottleneck, 10)
 
-        self.relu = nn.LeakyReLU(0.2)                #sun. energopoihshs krufou epipedou
-        self.softmax = nn.Softmax(dim=1)     #sun. energopoihshs epipedou eksodou
+        self.relu = nn.LeakyReLU(0.2)                #activation function in hidden layer
+        self.softmax = nn.Softmax(dim=1)             #activation function in output layer
         
     def forward(self, input):
-        x = self.relu(self.fc1(input))   # hidden layer
-        return self.softmax(self.fc2(x)) # output layer
+        x = self.relu(self.fc1(input))               #hidden layer
+        return self.softmax(self.fc2(x))             #output layer
 
 
-#dhmiourgia custom dataset synarthshs gia to dataloader
+#create custom dataset function for dataloader
 class myDataset(torch.utils.data.Dataset):
     def __init__(self, data, labels):
         self.data = data
@@ -63,21 +63,21 @@ class myDataset(torch.utils.data.Dataset):
         sample = {'data' : data, 'labels' : labels}
         return sample
 
-#diavazo ta dedomena
+#read data
 train = pd.read_csv('./mnist_train.csv')
 test = pd.read_csv('./mnist_test.csv')
 
-#apo pandas se numpy
+#from pandas to numpy
 x = train.to_numpy()
 
-#ksexwrizw labels apo dedomena
+#separate labels from data
 labels = x[:,0]
 data = x[:,1:]
 
 #normalization [0, 1]
 data = data/255
 
-#katanomh dedomenwn
+#distribution of data - what percent of the dataset corresponds to each number
 occ = {}
 for i in range (10):
     occ[str(i)]=str(np.count_nonzero(labels == i)/600 )+"%"
@@ -119,11 +119,11 @@ for fold in range(5):
             batch_ce = torch.sum(goal*torch.log(output),dim=1)
             loss_ce = -torch.mean(batch_ce)
             
-            #epilegoume th metrikh pou theloume 
+            #to choose between cross entropy or mse (cross entropy best for classification)
             #epoch_loss += loss_ce.item()
             epoch_loss += loss_mse.item()
             
-            #epilegoume me poia metrikh theloume na ekpaideusoume
+            #same choice for back propagation 
             #loss_ce.backward()
             loss_mse.backward()
             
@@ -146,11 +146,11 @@ for fold in range(5):
                 batch_ce = torch.sum(goal*torch.log(output),dim=1)
                 loss_ce = -torch.mean(batch_ce)
 
-                #antistoixa me to train
+                #same choice as train
                 #eval_loss += loss_ce.item()
                 eval_loss += loss_mse.item()                
 
-                #ypologizoyme to eval accuracy
+                #calculate eval accuracy
                 for idx, i in enumerate(output):
                    
                     if torch.argmax(i) == etiketes[idx]:
