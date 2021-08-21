@@ -8,7 +8,7 @@ import random
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 lr = 0.1
 
-#apo thn timh tou label ftiaxnoume ena one hot dianusma - gia to mse
+#one hot vector
 def batch2onehots(labels):
     one_hot = torch.zeros(labels.size()[0], 10)
     for i in range(len(labels)):
@@ -20,17 +20,17 @@ def batch2onehots(labels):
 #cross validation
 def n_fold(data,labels,n):
     data_len = len(data)
-    eval_len = data_len / 5 #to 1/5 einai gia eval sto cv
+    eval_len = data_len / 5 
     eval_len = int(eval_len)
     eval_data = data[n*eval_len: (n+1) * eval_len, :]
     eval_labels = labels[n*eval_len: (n+1) * eval_len]
-    #pairnw gia train o,ti yparxei prin kai meta to eval - 4/5
+  
     train_data = np.concatenate((data[(n-1)*eval_len: n*eval_len, :], data[(n+1)*eval_len:,:]),axis=0) 
     train_labels = np.concatenate((labels[(n-1)*eval_len: n*eval_len] ,labels[(n+1)*eval_len:]),axis=0)
     
     return eval_data, eval_labels, train_data, train_labels    
 
-#arxitektonikh nn
+#nn architecture
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -50,7 +50,7 @@ class Net(nn.Module):
         return self.softmax(self.fc2(x)) # output layer
 
 
-#dhmiourgia custom dataset synarthshs gia to dataloader
+#custom dataset function for dataloader
 class myDataset(torch.utils.data.Dataset):
     def __init__(self, data, labels):
         self.data = data
@@ -65,21 +65,21 @@ class myDataset(torch.utils.data.Dataset):
         sample = {'data' : data, 'labels' : labels}
         return sample
 
-#diavazo ta dedomena
+#read dataset
 train = pd.read_csv('./mnist_train.csv')
 test = pd.read_csv('./mnist_test.csv')
 
-#apo pandas se numpy
+#from pandas to numpy
 x = train.to_numpy()
 
-#ksexwrizw labels apo dedomena
+#separate labels from data
 labels = x[:,0]
 data = x[:,1:]
 
 #normalization [0, 1]
 data = data/255
 
-#katanomh dedomenwn
+#distribution of data
 occ = {}
 for i in range (10):
     occ[str(i)]=str(np.count_nonzero(labels == i)/600 )+"%"
